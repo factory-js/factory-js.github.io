@@ -9,7 +9,7 @@ on:
 permissions:
   contents: read
 jobs:
-  run-build:
+  build:
     timeout-minutes: 10
     runs-on: ubuntu-22.04
     steps:
@@ -28,5 +28,5 @@ jobs:
       - name: Install dependencies
         run: pnpm i --frozen-lockfile
 
-      - name: Run build
+      - name: Build
         run: pnpm run build
