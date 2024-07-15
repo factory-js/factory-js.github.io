@@ -1,8 +1,8 @@
-# Contributing guide
+# Contributing Guide
 
 Thank you for your interest in contributing to FactoryJS documentation.
 
-## How to contribute
+## How to Contribute
 
 1. Fork this repository from [GitHub link](https://github.com/factory-js/factory-js.github.io/fork) and clone it. [First Contributions](https://github.com/firstcontributions/first-contributions) would be helpful.
 
