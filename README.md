@@ -11,5 +11,5 @@ Then visit http://localhost:3000.
 
 ## Contributing
 
-Please make sure to read the [Contributing guide](./CONTRIBUTING.md) before making a pull request.  
+Please make sure to read the [Contributing Guide](./CONTRIBUTING.md) before making a pull request.  
 Contributions are welcome!
