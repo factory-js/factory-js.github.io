@@ -20,7 +20,10 @@ const config: DocsThemeConfig = {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="description" content={description} />
         <meta name="og:description" content={description} />
-        <meta property="og:image" content="/og-image.png" />
+        <meta
+          property="og:image"
+          content="https://factory-js.github.io/og-image.png"
+        />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
       </>
     );
