@@ -1,0 +1,80 @@
+import { Callout } from "nextra/components";
+
+## Managing Multiple Properties and Variables Using Keys
+
+By using `.trait`, you can manage multiple properties and variables using keys. Within `.trait`, you can define [properties](./property.mdx), [variables](./variable.mdx), and [after hooks](./after-hook.mdx).
+
+```ts
+const userFactory = factory
+  .define({
+    props: {
+      role: () => "guest",
+      isAdmin: () => false,
+    },
+    vars: {
+      greeting: () => "Hi",
+    },
+  })
+  .traits({
+    admin: {
+      props: {
+        role: () => "admin",
+        isAdmin: () => true,
+      },
+      vars: {
+        greeting: () => "Hello",
+      },
+      after: () => {
+        console.log("Admin created");
+      },
+    },
+  });
+
+// To use a trait, specify the key with `use`
+await userFactory.use((t) => t.admin).build();
+```
+
+You can also define multiple traits. In the example below, three traits are defined.
+
+```ts
+const userFactory = factory
+  .define({
+    props: {
+      name: () => "John",
+      role: () => "guest",
+      isAdmin: () => false,
+    },
+    vars: {},
+  })
+  .traits({
+    employee: {
+      props: {
+        role: () => "employee",
+        isAdmin: () => false,
+      },
+    },
+    admin: {
+      props: {
+        role: () => "admin",
+        isAdmin: () => true,
+      },
+    },
+  })
+  .traits({
+    maskedName: {
+      props: {
+        name: () => "***",
+      },
+    },
+  });
+```
+
+You can use multiple `.trait` as well. The last applied trait takes precedence.
+
+```ts
+await userFactory
+  .use((t) => t.employee)
+  .use((t) => t.admin)
+  .use((t) => t.maskedName)
+  .build(); // 👉 { name: "***", role: "admin", isAdmin: true }
+```

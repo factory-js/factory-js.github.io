@@ -1,0 +1,226 @@
+import { Callout } from "nextra/components";
+
+## Defining Variables
+
+To define variables, include them in the `vars` property within `.define`. Defined variables can be referenced when generating property values in `.props`. In the example below, a variable called `greeting` is defined and used to generate the value of the `bio` property.
+
+```ts {11,16}
+import { factory, later } from "@factory-js/factory";
+
+const userFactory = factory
+  .define({
+    props: {
+      // At this point, the `greeting` variable cannot be referenced yet, so only the type is defined
+      bio: later<string>(),
+    },
+    vars: {
+      // Define a variable called `greeting`
+      greeting: () => "I'm",
+    },
+  })
+  .props({
+    // Reference the `greeting` variable to generate the value of `bio`
+    bio: async ({ vars }) => `${await vars.greeting} John`,
+  });
+
+console.log(await userFactory.build()); // 👉 { bio: "I'm John." }
+```
+
+Note that you cannot reference variables within `.define`. Therefore, the `bio` property in the above `.define` uses `later` to define only the type.
+
+<Callout type="info">
+  For more details on how to use `later`, refer to [Placeholder](./placeholder).
+</Callout>
+
+## Overwriting Variables
+
+To overwrite the defined variables in a factory, use `.vars`. In the example below, the value of `greeting` is overwritten to `Hello I'm`.
+
+```ts {16}
+import { factory } from "@factory-js/factory";
+
+const userFactory = factory
+  .define({
+    props: {
+      bio: later<string>(),
+    },
+    vars: {
+      greeting: () => "I'm",
+    },
+  })
+  .props({
+    bio: async ({ vars }) => `${await vars.greeting} John`,
+  });
+
+const user = await userFactory.vars({ greeting: () => "Hello I'm" }).build();
+
+console.log(await userFactory.build()); // 👉 { bio: "Hello, I'm John." }
+```
+
+`.vars` can be called multiple times in a method chain. If the same variable is overwritten multiple times, the last value takes precedence.
+
+```ts {12}
+const user = await userFactory
+  .vars({ greeting: () => "I'm" })
+  .vars({ greeting: () => "Hi, I'm" })
+  .vars({ greeting: () => "Hello I'm" })
+  .build();
+
+console.log(await userFactory.build()); // 👉 { bio: "Hello, I'm John." }
+```
+
+<Callout type="warning" emoji="⚠️">
+  You cannot add new variables with `.vars`. You can only overwrite the values
+  of variables defined in `.define`. If you want to add variables, refer to
+  [Extending Factory](./extending-factory).
+</Callout>
+
+## Using Variables with ORM
+
+Variables are most useful when combined with ORM, especially when defining factories that have relationships with other models. In the example below, factories for a user and the user's profile are defined. To create a user's profile, the owning user is needed, so the user object is stored in a variable and referenced in the `userId` property.
+
+```ts {28,37} filename="factories.ts"
+import { factory, later } from "@factory-js/factory";
+
+// Define the user factory
+const userFactory = factory.define(
+  {
+    props: {
+      id: () => 1,
+      name: () => "John",
+      role: () => "employee",
+    },
+    vars: {},
+  },
+  async (user) => {
+    return db.user.create({ data: user });
+  },
+);
+
+// Define the profile factory
+const profileFactory = factory
+  .define(
+    {
+      props: {
+        userId: later<string>(),
+        bio: () => "Hello",
+      },
+      vars: {
+        // Store a default user in a variable for this profile
+        user: () => await userFactory.create(),
+      },
+    },
+    async (profile) => {
+      return db.profile.create({ data: profile });
+    },
+  )
+  .props({
+    // Reference the stored user's ID
+    userId: async ({ vars }) => (await vars.user).id,
+  });
+
+console.log(await profileFactory.create()); // 👉 { id: 1, bio: "Hello" }
+```
+
+You can also change the user to any desired user with `.vars`. Below is a test that verifies if `true` is returned when the profile belongs to an admin user.
+
+```ts {11} filename="src/is-admin-profile.test.ts"
+import { expect, it, describe } from "vitest";
+import { userFactory, profileFactory } from "../factories";
+import { isAdminProfile } from "./is-admin-profile";
+
+describe("when a profile is for admin", () => {
+  it("returns true", async () => {
+    const admin = await userFactory
+      .props({ id: () => 2, role: () => "admin" })
+      .create();
+
+    const profile = await profileFactory.vars({ user: () => admin }).create();
+
+    expect(isAdminProfile(profile)).toBe(true);
+  });
+});
+```
+
+## Caching and Efficiency
+
+FactoryJS caches and reuses variables efficiently. This ensures that a variable is calculated only once, maintaining idempotency even if referenced multiple times. In the example below, the cardId and roomId properties have the same number, as they both reference the same id variable.
+
+```ts {13,17-19}
+let count = 1;
+
+const userFactory = factory
+  .define({
+    props: {
+      id: later<number>(),
+      cardId: later<string>(),
+      roomId: later<string>(),
+    },
+    vars: {
+      // It seems `count` would increment each time,
+      // but it is cached and calculated only once
+      id: () => count++,
+    },
+  })
+  .props({
+    id: async ({ vars }) => await vars.id,
+    cardId: async ({ vars }) => `card:${await vars.id}`,
+    roomId: async ({ vars }) => `room:${await vars.id}`,
+  });
+
+console.log(await userFactory.build()); // 👉 { id: 1, cardId: 'card:1', roomId: 'room:1' }
+console.log(await userFactory.build()); // 👉 { id: 2, cardId: 'card:2', roomId: 'room:2' }
+```
+
+Therefore, you don't need to worry about the number or order of variable calls. FactoryJS handles caching appropriately, allowing you to define factories intuitively.
+
+Additionally, unused variables are not calculated. In the example below, executing the `id` variable would log `CALL` to the console, but since `id` is never used, nothing is logged. You don't need to worry about unnecessary calculations for variables.
+
+```ts {7}
+const userFactory = factory.define({
+  props: {
+    name: () => "John",
+  },
+  vars: {
+    id: () => {
+      console.log("CALL");
+      return 1;
+    },
+  },
+});
+
+console.log(await userFactory.build()); // Nothing is logged to the console
+```
+
+## Defining Variables Dependent on Other Variables
+
+You can also define variables that reference other variables. In the example below, the value of `actualPrice` is generated based on the values of `price` and `discount`.
+
+```ts {13-14}
+const itemFactory = factory
+  .define({
+    props: {
+      label: later<string>(),
+    },
+    vars: {
+      price: () => 100,
+      discount: () => 0.1,
+      actualPrice: later<number>(),
+    },
+  })
+  .vars({
+    actualPrice: async (vars) =>
+      (await vars.price) * (1 - (await vars.discount)),
+  })
+  .props({
+    label: async ({ vars }) => `$${await vars.actualPrice}`,
+  });
+
+const item = await itemFactory.build();
+console.log(item); // 👉 { label: '$90' }
+```
+
+<Callout type="warning" emoji="⚠️">
+  Avoid creating variables that reference each other circularly, as this could
+  result in an infinite loop.
+</Callout>

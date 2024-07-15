@@ -1,0 +1,137 @@
+import { Tabs } from "nextra/components";
+import { Callout } from "nextra/components";
+
+## Installation
+
+To install FactoryJS, run the following command:
+
+<Tabs items={["pnpm", "npm", "yarn"]}>
+  <Tabs.Tab>
+
+    ```sh
+    pnpm add -D @factory-js/factory
+    ```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+
+    ```sh
+    npm i --save-dev @factory-js/factory
+    ```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+
+    ```sh
+    yarn add -D @factory-js/factory
+    ```
+
+  </Tabs.Tab>
+</Tabs>
+
+## Quick Start
+
+Let's get started with FactoryJS. To define a factory, use `.define`.
+In the example below, we use [Faker](https://fakerjs.dev/) to generate values, but you can also use other libraries or fixed values.
+
+```ts filename="factories/user-factory.ts"
+import { factory } from "@factory-js/factory";
+import { faker } from "@faker-js/faker";
+
+const userFactory = factory.define({
+  props: {
+    firstName: () => faker.person.firstName(),
+    lastName: () => faker.person.lastName(),
+    role: () => "employee",
+  },
+  vars: {},
+});
+```
+
+As an example of using the defined factory, let's write a simple test. Below is a function that determines whether a user is an admin. We will write tests for this function.
+
+```ts filename="src/is-admin.ts"
+// Function to be tested
+export const isAdmin = (user: User) => {
+  return user.role === "admin";
+};
+```
+
+To generate objects using the factory, use `.build`. Additionally, you can use `.props` to overwrite property values according to the test case. In the test below, we test cases where the user is an admin and a guest.
+
+```ts {8,17} filename="src/is-admin.test.ts"
+import { expect, it, describe } from "vitest";
+import { userFactory } from "../factories/user-factory";
+import { isAdmin } from "./is-admin";
+
+describe("when a user is admin", () => {
+  it("returns true", async () => {
+    const user = await userFactory(db)
+      .props({ role: () => "admin" }) // Overwrite role to admin
+      .build();
+    expect(isAdmin(user)).toBe(true);
+  });
+});
+
+describe("when a user is guest", () => {
+  it("returns false", async () => {
+    const user = await userFactory(db)
+      .props({ role: () => "guest" }) // Overwrite role to guest
+      .build();
+    expect(isAdmin(user)).toBe(false);
+  });
+});
+```
+
+Compared to generating objects normally, it is clearer which properties are relevant to the test. Using FactoryJS can reduce the amount of code and improve readability.
+
+## Combining with ORM
+
+In addition to simply generating objects, you can also save them to the database by combining them with ORM. You can specify how to save objects to the database by passing a function as the second argument to `.define`. Below is an example of saving data to the database using Prisma's [`create()`](https://www.prisma.io/docs/orm/prisma-client/queries/crud#create).
+
+```ts {17} filename="factories/user-factory.ts"
+import { factory } from "@factory-js/factory";
+import { faker } from "@faker-js/faker";
+// `db` assumes an instance of `PrismaClient`
+import { db } from "../db";
+
+const userFactory = factory.define(
+  {
+    props: {
+      firstName: () => faker.person.firstName(),
+      lastName: () => faker.person.lastName(),
+      role: () => "employee",
+    },
+    vars: {},
+  },
+  async (user) => {
+    // Receive the generated object as `user` and save it to the database
+    return db.user.create({ data: user });
+  },
+);
+```
+
+To use the function set as the second argument, use `.create` instead of `.build`.
+
+```ts {8} filename="src/is-admin.test.ts"
+import { expect, it, describe } from "vitest";
+import { userFactory } from "../factories/user-factory";
+import { isAdmin } from "./is-admin";
+
+describe("when a user is admin", () => {
+  it("returns true", async () => {
+    // `.create` returns the object saved to the database
+    const user = await userFactory.props({ role: () => "admin" }).create();
+
+    expect(isAdmin(user)).toBe(true);
+  });
+});
+```
+
+FactoryJS simply runs the function provided as the second argument and returns the result, without depending on the specifications of any particular ORM or library. Therefore, you can use it with libraries other than Prisma or save data to a CSV file instead of a database.
+
+<Callout type="info">
+  FactoryJS has a dedicated plugin for Prisma that can automatically generate
+  factories from schema files. For more details, see the [Get
+  Started](./prisma-plugin/get-started).
+</Callout>

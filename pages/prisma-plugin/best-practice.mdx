@@ -1,0 +1,44 @@
+import { FileTree } from 'nextra/components'
+  
+## Considering Customizability
+
+While you can import and use the automatically generated factories directly from `./generated/factories.ts`, it is recommended to create a `factories` directory at a desired location in your project. This allows for easier management and customization of the factories if you want to manually adjust them later.
+
+<FileTree>
+  <FileTree.Folder name="factories" defaultOpen>
+    <FileTree.File name="user-factory.ts" />
+    <FileTree.File name="post-factory.ts" />
+    <FileTree.File name="profile-factory.ts" />
+    <FileTree.File name="..." />
+  </FileTree.Folder>
+</FileTree>
+
+In each file, define the factory and customize it as needed, like so:
+
+```ts filename="factories/user-factory.ts"
+// `db` assumes an instance of `PrismaClient`
+import { db } from "../db";
+import { faker } from "@faker-js/faker";
+
+export const userFactory = await defineUserFactory(db).props({
+  // Set a valid email address format as the default value
+  email: () => faker.internet.exampleEmail(),
+});
+```
+
+The reason for this is that automatically generated factories will have default values of the **correct type** (e.g., strings or numbers) based on the schema file, but they do not consider whether these values have the **correct format** (e.g., UUIDs or email addresses). For example, if you have an `email` field and want a default value in the correct email address format, you will need to specify it manually as shown above.
+
+To use the defined factory, import and use it as usual:
+
+```ts filename="src/is-admin.test.ts"
+import { expect, it, describe } from "vitest";
+import { userFactory } from "../factories/user-factory";
+import { isAdmin } from "./is-admin";
+
+describe("when a user is admin", () => {
+  it("returns true", async () => {
+    const user = await userFactory.props({ role: () => "admin" }).create();
+    expect(isAdmin(user)).toBe(true);
+  });
+});
+```

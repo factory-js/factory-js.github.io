@@ -1,0 +1,25 @@
+---
+title: FactoryJS - The object generator for testing
+---
+
+import { useData } from "nextra/data";
+import { createHighlighter } from "shiki";
+import { getCodes } from "../lib/codes";
+import { Home } from "../components/Home";
+
+export const getStaticProps = async () => {
+  return {
+    props: {
+      ssg: {
+        codes: await getCodes(),
+      },
+    },
+  };
+};
+
+export const HomeContainer = () => {
+  const { codes } = useData();
+  return <Home codes={codes} />;
+};
+
+<HomeContainer />

@@ -1,0 +1,64 @@
+import { Callout } from "nextra/components";
+
+## Extending a Factory
+
+There may be times when you want to create a new factory that adds properties or variables to an existing factory. In such cases, you can use `.def`. In the example below, a new `employeeFactory` is defined by reusing the properties and variables defined in `userFactory`.
+
+```ts {14}
+import { factory } from "@factory-js/factory";
+
+const userFactory = await factory.define({
+  props: {
+    name: () => "John",
+    age: () => 20,
+  },
+  vars: {
+    title: () => "Mr.",
+  },
+});
+
+// Use `.def` to get the properties and variables from `userFactory`
+const { props, vars } = userFactory.def;
+
+const employeeFactory = await factory.define({
+  props: {
+    ...props,
+    role: () => "admin",
+  },
+  vars: {
+    ...vars,
+    greeting: () => "Hello",
+  },
+});
+```
+
+Note that the properties and variables returned by `.def` are those defined at the time of `.define`. This means that results from method chains using `.props` or `.vars` to overwrite values later are not considered. The reason for this is that it is possible to define values dependent on other properties or variables within a method chain, and reusing them is very challenging due to TypeScript limitations.
+
+```ts {12,16}
+import { factory } from "@factory-js/factory";
+
+const userFactory = await factory
+  .define({
+    props: {
+      name: () => "John",
+    },
+    vars: {},
+  })
+  // Here, `name` is overwritten to "Tom", but this is not reflected in the `.def` result
+  .props({
+    name: () => "Tom",
+  });
+
+// The `props.name` returned here is "John", not "Tom"
+const { props } = userFactory.def;
+
+const employeeFactory = await factory.define({
+  props: {
+    ...props,
+    role: () => "admin",
+  },
+  vars: {},
+});
+
+console.log(await employeeFactory.build()); // 👉 { name: "John", role: "admin" }
+```

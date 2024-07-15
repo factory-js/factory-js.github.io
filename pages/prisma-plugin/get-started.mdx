@@ -1,0 +1,103 @@
+import { Tabs } from "nextra/components";
+import { Callout } from "nextra/components";
+
+## Introduction
+
+FactoryJS provides a plugin for Prisma. By using this plugin, you can automatically generate factories from Prisma schema files.
+
+<Callout type="info">
+  Currently, FactoryJS only provides a plugin for Prisma. However, you can
+  manually define factories to use with other ORMs. For more details, refer to
+  the [Get Started](../other-orms/get-started) section in Other ORMs.
+</Callout>
+
+## Installation
+
+To use the Prisma plugin, install the `@factory-js/factory` and `@factory-js/prisma-factory` packages. Run the following command to install the packages:
+
+<Tabs items={["pnpm", "npm", "yarn"]}>
+  <Tabs.Tab>
+
+    ```sh
+    pnpm add -D @factory-js/factory @factory-js/prisma-factory
+    ```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+
+    ```sh
+    npm i --save-dev @factory-js/factory @factory-js/prisma-factory
+    ```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+
+    ```sh
+    yarn add -D @factory-js/factory @factory-js/prisma-factory
+    ```
+
+  </Tabs.Tab>
+</Tabs>
+
+## Setup
+
+After installing the packages, add the `generator` setting to your Prisma schema file as follows:
+
+```prisma {10-12}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator factory {
+  provider = "prisma-factory"
+}
+
+...
+```
+
+The setup is now complete. Let's generate the factories. Run the following command to generate the factories in the `./generated/factories.ts` directory:
+
+```sh
+prisma generate
+```
+
+## Usage
+
+To use the automatically generated factories, import them from `./generated/factories.ts` as shown below. Use `.create` to create objects.
+
+```ts
+import { defineUserFactory } from "./generated/factories";
+import { PrismaClient } from "@prisma/client";
+
+const db = new PrismaClient();
+const userFactory = await defineUserFactory(db);
+
+it("returns an admin user", async () => {
+  const user = userFactory.props({ role: () => "ADMIN" }).create();
+  expect(user.role).toBe("ADMIN");
+});
+```
+
+<Callout type="info">
+  It is recommended to create a directory like `/factories` rather than
+  importing directly from `./generated/factories.ts`. For more details, refer to
+  [Best Practice](./best-practice).
+</Callout>
+
+The Prisma plugin not only creates the model but also handles one-to-one and one-to-many relationships required for the model when you call `.create`, saving them all to the database. Therefore, you typically do not need to specify relationships. However, there may be cases where you want to change the relationships for a specific test case. In such cases, you can use `.vars` to change them. The example below changes the relationship to create an admin user's profile.
+
+```ts {6}
+const userFactory = await defineUserFactory(db);
+const profileFactory = await defineProfileFactory(db);
+
+it("create an admin profile", async () => {
+  const user = userFactory.props({ role: () => "ADMIN" }).create();
+  const profile = profileFactory.vars({ user: () => user }).create();
+  expect(profile.userId).toBe(user.id);
+});
+```
