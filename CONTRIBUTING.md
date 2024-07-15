@@ -35,7 +35,7 @@ Thank you for your interest in contributing to FactoryJS documentation.
    git commit -m 'add a new feature'
    ```
 
-1. Run linters and tests in the project root before pushing the PR.
+1. Run linters in the project root before pushing the PR.
 
    ```sh
    pnpm run secretlint
