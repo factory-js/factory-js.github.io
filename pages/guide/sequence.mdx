@@ -1,0 +1,67 @@
+import { Callout } from "nextra/components";
+
+## Generating Sequential Values
+
+To generate sequential values, you can use `seq`. The first argument is the initial value, and the second argument is a function that specifies how to generate the values.
+
+```ts {5-6}
+import { factory, seq } from "@factory-js/factory";
+
+const userFactory = factory.define({
+  props: {
+    id: seq(1, (n) => n),
+    name: seq(1, (n) => `user-${n}`), // Can generate non-numeric values as well
+  },
+  vars: {},
+});
+
+// 👇 [{ id: 1, name: "user-1" }, { id: 2, name: "user-2" }]
+console.log(await userFactory.buildList(2));
+```
+
+You can also reference variables and other properties within `seq`.
+
+```ts {16-17}
+import { factory, seq } from "@factory-js/factory";
+
+const userFactory = factory
+  .define({
+    props: {
+      key: later<string>(),
+      name: () => "John",
+    },
+    vars: {
+      role: () => "admin",
+    },
+  })
+  .props({
+    key: seq(
+      1,
+      async (n, { props, vars }) =>
+        `${await props.name}:${await vars.role}:${n}`,
+    ),
+  });
+
+// 👇 [{ id: 1, name: "John:admin:1" }, { id: 2, name: "John:admin:2" }]
+console.log(await userFactory.buildList(2));
+```
+
+Note that test libraries like Vitest and Jest run tests in multiple threads by default, so the values output by `seq` may not be unique across threads.
+If you use `seq` to avoid unique constraints in the database, consider generating unique values by combining it with [`VITEST_WORKER_ID`](https://vitest.dev/guide/migration#envs).
+
+```ts {4, 8}
+import { factory, seq } from "@factory-js/factory";
+
+// `VITEST_WORKER_ID` has a different value for each thread
+const workerId = process.env["VITEST_WORKER_ID"];
+
+const userFactory = factory.define({
+  props: {
+    email: seq(1, (n) => `test-${n}-${workerId}@example.com`),
+  },
+  vars: {},
+});
+
+// 👇 [{ email: `test-1-1@example.com` }, { email: `test-2-1@example.com` }]
+console.log(await userFactory.buildList(2));
+```
