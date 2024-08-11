@@ -5,25 +5,19 @@ import { createHighlighter } from "shiki";
 const codes = {
   hero: {
     factory: `import { factory } from "@factory-js/factory";
-import { faker } from "@faker-js/faker";
 
 const userFactory = factory
   .define({
     props: {
-      firstName: () => faker.person.firstName(),
-      lastName: () => faker.person.lastName(),
+      firstName: () => "John",
+      lastName: () => "Doe",
       fullName: later<string>(),
-      bio: later<string>(),
     },
-    vars: {
-      greeting: () => "I'm",
-    },
+    vars: {},
   })
   .props({
     fullName: async ({ props }) =>
-      \`\${await props.firstName} \${await props.lastName}\`,
-    bio: async ({ props, vars }) =>
-      \`\${await vars.greeting} \${await props.firstName}\`,
+      \`\${await props.firstName} \${await props.lastName}\`
   });
 
 console.log(await userFactory.buildList(2));`,
@@ -31,14 +25,12 @@ console.log(await userFactory.buildList(2));`,
   {
     "firstName": "John",
     "lastName": "Doe",
-    "fullName": "John Doe",
-    "bio": "I'm John"
+    "fullName": "John Doe"
   },
   {
-    "firstName": "Tom",
-    "lastName": "Smith",
-    "fullName": "Tom Smith",
-    "bio": "I'm Tom"
+    "firstName": "John",
+    "lastName": "Doe",
+    "fullName": "John Doe"
   }
 ]`,
   },
