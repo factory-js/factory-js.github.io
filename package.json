@@ -28,7 +28,7 @@
     "@shikijs/transformers": "^1.10.1"
   },
   "devDependencies": {
-    "@secretlint/secretlint-rule-preset-recommend": "^8.0.0",
+    "@secretlint/secretlint-rule-preset-recommend": "^9.0.0",
     "@tsconfig/strictest": "^2.0.2",
     "@types/node": "18.19.57",
     "@types/react": "^18.3.3",
@@ -46,7 +46,7 @@
     "lint-staged": "^15.0.0",
     "postcss": "^8.4.39",
     "prettier": "^3.2.5",
-    "secretlint": "^8.0.0",
+    "secretlint": "^9.0.0",
     "serve": "^14.2.3",
     "tailwindcss": "^3.4.4",
     "typescript": "^5.5.3"
