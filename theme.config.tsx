@@ -1,4 +1,7 @@
-import type { DocsThemeConfig } from "nextra-theme-docs";
+import {
+  useConfig as getConfig,
+  type DocsThemeConfig,
+} from "nextra-theme-docs";
 
 const config: DocsThemeConfig = {
   logo: <h1 className="flex items-center gap-2 font-medium">FactoryJS</h1>,
@@ -8,15 +11,23 @@ const config: DocsThemeConfig = {
     link: "https://github.com/factory-js/factory-js",
   },
   footer: {
-    text: (
+    content: (
       <span className="text-sm">© {new Date().getFullYear()} FactoryJS</span>
     ),
   },
   head: () => {
+    const { frontMatter } = getConfig();
+    const title = frontMatter["title"] as unknown;
+
     const description =
       "FactoryJS is a lightweight, type-safe object generation library for testing. It is independent of any specific framework, making it versatile for everything from unit testing to E2E testing and seed data generation.";
     return (
       <>
+        <title>
+          {typeof title === "string"
+            ? `${title} | FactoryJS`
+            : "FactoryJS - The object generator for testing"}
+        </title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="description" content={description} />
         <meta name="og:description" content={description} />
@@ -27,9 +38,6 @@ const config: DocsThemeConfig = {
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
       </>
     );
-  },
-  useNextSeoProps() {
-    return { titleTemplate: "%s | FactoryJS" };
   },
 };
 

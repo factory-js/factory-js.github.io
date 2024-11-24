@@ -32,7 +32,7 @@ export const UseCases = ({ codes }: Props) => {
           {["Testing", "API Mocking", "E2E", "Seeding"].map((tab) => (
             <Tab
               key={tab}
-              className="first:rounded-l last:rounded-r text-sm !ring-0 bg-neutral-100 dark:bg-neutral-800 !ring-offset-0 text-neutral-900 data-[focus]:bg-neutral-700 data-[selected]:bg-neutral-900 dark:data-[selected]:bg-neutral-900 dark:text-neutral-50 py-2.5 px-6 data-[selected]:text-white data-[hover]:bg-neutral-700 dark:data-[hover]:bg-neutral-800 data-[hover]:text-white"
+              className="first:rounded-l last:rounded-r text-sm !ring-0 bg-gray-100 dark:bg-neutral-800 !ring-offset-0 text-neutral-900 data-[focus]:bg-neutral-700 data-[selected]:bg-neutral-900 dark:data-[selected]:bg-neutral-900 dark:text-neutral-50 py-2.5 px-6 data-[selected]:text-white data-[hover]:bg-neutral-700 dark:data-[hover]:bg-neutral-800 data-[hover]:text-white"
             >
               {tab}
             </Tab>
