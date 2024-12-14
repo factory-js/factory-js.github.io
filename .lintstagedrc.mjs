@@ -11,7 +11,7 @@ const removeIgnoredFiles = async (files) => {
   return filteredFiles.join(" ");
 };
 
-export default {
+const config = {
   "**/*.{ts,tsx,js,mjs,jsx}": [
     async (files) => {
       const filesToLint = await removeIgnoredFiles(files);
@@ -22,3 +22,5 @@ export default {
   "*.{md,html,css,scss,json,yml,yaml,md,mdx}": ["prettier -w -u"],
   "**/*": ["secretlint --maskSecrets"],
 };
+
+export default config;
