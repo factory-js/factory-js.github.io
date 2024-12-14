@@ -2,7 +2,7 @@ import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
 import {
   SiJest,
   SiMockserviceworker,
-  SiPlaywright,
+  SiPuppeteer,
   SiPrisma,
   SiTypescript,
 } from "react-icons/si";
@@ -127,16 +127,16 @@ export const UseCases = ({ codes }: Props) => {
               description="When writing E2E tests, you may sometimes want to pre-create test data in the database. Using FactoryJS allows you to prepare test data with simple code."
               libraries={[
                 <Tooltip
-                  key="playwright"
-                  content="Playwright, Puppeteer, etc."
+                  key="puppeteer"
+                  content="Puppeteer, Playwright, etc."
                   side="top"
                   sideOffset={4}
                   delayDuration={0}
                 >
                   <span className="p-2 hover:text-green-700">
-                    <SiPlaywright
+                    <SiPuppeteer
                       className="text-2xl shrink-0"
-                      aria-label="Playwright, Puppeteer, etc."
+                      aria-label="Puppeteer, Playwright, etc."
                     />
                   </span>
                 </Tooltip>,
